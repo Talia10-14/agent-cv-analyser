@@ -3,12 +3,7 @@ import requests
 import os
 from analyzer import analyser_cv, analyser_plusieurs_cvs, extraire_texte_pdf
 
-st.set_page_config(
-    page_title="Agent IA — Analyse de CVs",
-    page_icon="🤖",
-    layout="wide"
-)
-
+st.set_page_config(page_title="Agent IA — Analyse de CVs", page_icon="🤖", layout="wide")
 st.title("🤖 Agent IA — Analyse Intelligente de CVs")
 st.markdown("*Propulsé par n8n + Groq + LLaMA 3.3 70B*")
 st.divider()
@@ -18,12 +13,10 @@ with st.sidebar:
     poste_vise = st.text_input("Poste recherché", value="Spécialiste IA / Automatisation")
     st.divider()
     st.markdown("**Comment ça marche ?**")
-    st.markdown("1. Uploadez un ou plusieurs CVs PDF")
+    st.markdown("1. Téléchargez un ou plusieurs CV PDF")
     st.markdown("2. Le workflow n8n déclenche l'analyse IA")
     st.markdown("3. Score, points forts/faibles")
     st.markdown("4. Recommandation automatique")
-
-tab1, tab2 = st.tabs(["📄 Analyser un CV", "📊 Comparer plusieurs CVs"])
 
 def afficher_resultat(r):
     couleur = {"RETENU": "🟢", "À CONSIDÉRER": "🟡", "REJETÉ": "🔴"}
@@ -32,7 +25,7 @@ def afficher_resultat(r):
     st.caption(r.get("poste_actuel", ""))
     st.markdown("#### 📊 Scores")
     c1, c2, c3 = st.columns(3)
-    c1.metric("Global", f"{r.get('score_global', 0)}/100")
+    c1.metric("Mondial", f"{r.get('score_global', 0)}/100")
     c2.metric("Technique", f"{r.get('score_technique', 0)}/100")
     c3.metric("Expérience", f"{r.get('score_experience', 0)}/100")
     st.progress(r.get("score_global", 0) / 100)
@@ -59,6 +52,24 @@ def afficher_resultat(r):
     else:
         st.error(f"❌ {rec}")
 
+def analyser_via_n8n(texte, poste):
+    try:
+        rep = requests.post(
+            "http://localhost:5678/webhook/analyser-cv",
+            json={"texte_cv": texte, "poste_vise": poste},
+            timeout=30
+        )
+        if rep.status_code == 200:
+            data = rep.json()
+            if isinstance(data, list):
+                return data[0], True
+            return data, True
+    except Exception:
+        pass
+    return analyser_cv(texte, poste), False
+
+tab1, tab2 = st.tabs(["📄 Analyser un CV", "📊 Comparer plusieurs CVs"])
+
 with tab1:
     col1, col2 = st.columns([1, 1])
     with col1:
@@ -75,26 +86,11 @@ with tab1:
                         if not texte.strip():
                             st.error("Impossible d'extraire le texte.")
                         else:
-                            try:
-                                rep = requests.post(
-				     "http://localhost:5678/webhook/analyser-cv",
-				      json={"texte_cv": texte, "poste_vise": poste_vise},
-				      timeout=30
-					)
-				if rep.status_code == 200:
-				   data = rep.json()
-				   # n8n peut retourner une liste ou un objet direct
-				   if isinstance(data, list):
-				      resultat = data[0]
-				   else:
-				      resultat = data
-				      st.success("✅ Analysé via workflow n8n !")
-                                else:
-                                    st.warning("⚠️ n8n indisponible — analyse directe...")
-                                    resultat = analyser_cv(texte, poste_vise)
-                            except Exception:
-                                st.warning("⚠️ n8n indisponible — analyse directe...")
-                                resultat = analyser_cv(texte, poste_vise)
+                            resultat, via_n8n = analyser_via_n8n(texte, poste_vise)
+                            if via_n8n:
+                                st.success("✅ Analysé via workflow n8n !")
+                            else:
+                                st.warning("⚠️ Analyse directe (n8n indisponible)")
                             st.session_state["resultat"] = resultat
                     except Exception as e:
                         st.error(f"Erreur : {e}")
@@ -119,5 +115,5 @@ with tab2:
             for i, r in enumerate(resultats):
                 couleur = {"RETENU": "🟢", "À CONSIDÉRER": "🟡", "REJETÉ": "🔴"}
                 emoji = couleur.get(r.get("recommandation", ""), "⚪")
-                with st.expander(f"#{i+1} {emoji} {r.get('nom','?')} — Score: {r.get('score_global',0)}/100", expanded=(i == 0)):
+                with st.expander(f"#{i+1} {emoji} {r.get('nom','?')} — Note: {r.get('score_global',0)}/100", expanded=(i == 0)):
                     afficher_resultat(r)
