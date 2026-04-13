@@ -60,147 +60,79 @@ theme_colors = get_theme(current_theme)
 
 if current_theme == "light":
     theme_css = f"""
-    /* LIGHT THEME - AGGRESSIVE OVERRIDES */
+    /* LIGHT THEME - INTELLIGENT CONTRAST ONLY */
     
-    /* Force everything readable */
-    * {{
-        color: {theme_colors['text']} !important;
+    /* Keep overall light background */
+    [data-testid="stAppViewContainer"] {{
+        background-color: #FAFAFA !important;
     }}
     
-    html, body, [data-testid="stAppViewContainer"] {{
-        background-color: {theme_colors['bg']} !important;
+    /* Sidebar stays slightly darker for contrast */
+    [data-testid="stSidebar"] {{
+        background-color: #F0F0F0 !important;
     }}
     
-    [data-testid="stSidebar"], [data-testid="stSidebarContent"] {{
-        background-color: {theme_colors['bg_alt']} !important;
+    /* Text contrast - sidebar text must be readable on gray */
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{
+        color: #1A1A1A !important;
     }}
     
-    /* ALL Text must be readable */
-    p, span, div, label, h1, h2, h3, h4, h5, h6 {{
-        color: {theme_colors['text']} !important;
+    [data-testid="stSidebar"] label {{
+        color: #1A1A1A !important;
     }}
     
-    /* Headings in sidebar */
-    [data-testid="stSidebar"] * {{
-        color: {theme_colors['text']} !important;
+    [data-testid="stSidebar"] .stSelectbox label {{
+        color: #1A1A1A !important;
     }}
     
-    /* Kill the bright green text */
-    [style*="color"] {{
-        color: {theme_colors['text']} !important;
+    /* Main content text stays dark */
+    [data-testid="stMarkdownContainer"] {{
+        color: #1A1A1A !important;
     }}
     
-    /* Selectbox - must be white background with dark text */
+    /* Keep the green design - it's the essence */
+    /* Just ensure inputs are readable */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea,
+    .stSelectbox > div > div > select {{
+        background-color: white !important;
+        color: #1A1A1A !important;
+        border: 2px solid #ccc !important;
+    }}
+    
+    /* Selectbox dropdown styling */
     [data-baseweb="select"] {{
-        background-color: {theme_colors['bg_alt']} !important;
+        background-color: white !important;
     }}
     
-    [data-baseweb="select"] * {{
-        background-color: {theme_colors['bg_alt']} !important;
-        color: {theme_colors['text']} !important;
+    [data-baseweb="select"] > div {{
+        background-color: white !important;
+        color: #1A1A1A !important;
     }}
     
-    /* Tabs - dark mode killer */
-    [data-testid="stTabs"] {{
-        background-color: transparent !important;
+    /* Sliders have good contrast */
+    [data-testid="stSlider"] label {{
+        color: #1A1A1A !important;
     }}
     
-    .stTabs [role="tablist"] {{
-        background-color: {theme_colors['bg_alt']} !important;
-        border-bottom: 2px solid #ddd !important;
-    }}
-    
+    /* Keep tabs readable */
     .stTabs [role="tab"] {{
-        background-color: {theme_colors['bg_alt']} !important;
-        color: {theme_colors['text_dim']} !important;
+        color: #555 !important;
     }}
     
-    .stTabs [role="tab"]:hover {{
-        background-color: #e0e0e0 !important;
-    }}
-    
-    .stTabs [role="tab"][aria-selected="true"] {{
-        background-color: {theme_colors['bg']} !important;
-        color: {theme_colors['primary']} !important;
-        border-bottom: 3px solid {theme_colors['primary']} !important;
-    }}
-    
-    /* Inputs */
-    input, textarea, select {{
-        background-color: {theme_colors['bg_alt']} !important;
-        color: {theme_colors['text']} !important;
-        border: 1px solid #ccc !important;
-    }}
-    
-    input::placeholder {{
-        color: {theme_colors['text_muted']} !important;
-    }}
-    
-    /* Buttons */
+    /* Buttons stay green - that's the brand */
     .stButton > button {{
-        background-color: {theme_colors['primary']} !important;
         color: white !important;
-        border: none !important;
     }}
     
-    .stButton > button:hover {{
-        background-color: #1e6e3f !important;
+    /* Remove dark overlays on content */
+    [data-testid="stExpander"] {{
+        background-color: white !important;
     }}
     
-    /* Cards and expanders */
-    .stExpander {{
-        background-color: {theme_colors['bg_alt']} !important;
-        border: 1px solid #ddd !important;
-    }}
-    
-    .stExpander > div {{
-        background-color: {theme_colors['bg_alt']} !important;
-    }}
-    
-    /* Metrics */
-    .stMetric {{
-        background-color: {theme_colors['bg_alt']} !important;
-        border-radius: 8px;
-        padding: 1rem;
-    }}
-    
-    .stMetric * {{
-        color: {theme_colors['text']} !important;
-    }}
-    
-    /* Dividers */
-    hr {{
-        border-color: #ddd !important;
-    }}
-    
-    /* Data frame */
+    /* Data frames readable */
     [data-testid="stDataFrame"] {{
-        background-color: {theme_colors['bg']} !important;
-    }}
-    
-    .stDataFrame * {{
-        background-color: {theme_colors['bg']} !important;
-        color: {theme_colors['text']} !important;
-    }}
-    
-    /* Alerts */
-    [data-testid="stAlert"] {{
-        background-color: {theme_colors['bg_alt']} !important;
-        color: {theme_colors['text']} !important;
-    }}
-    
-    /* Progress bar colors */
-    [role="progressbar"] {{
-        background-color: #ddd !important;
-    }}
-    
-    /* Sliders */
-    [data-testid="stSlider"] {{
-        color: {theme_colors['text']} !important;
-    }}
-    
-    .stSlider * {{
-        color: {theme_colors['text']} !important;
+        background-color: white !important;
     }}
     """
 else:
