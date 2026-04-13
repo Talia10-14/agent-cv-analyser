@@ -67,6 +67,34 @@ with st.sidebar:
     )
 
     st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown('<div class="section-label">Scoring criteria</div>', unsafe_allow_html=True)
+    
+    competences_requises = st.text_area(
+        "Required skills (one per line)",
+        value="",
+        placeholder="Python\nDocker\nKubernetes",
+        height=80,
+        label_visibility="visible"
+    )
+    
+    experience_min = st.slider(
+        "Min experience (years)",
+        min_value=0,
+        max_value=15,
+        value=2,
+        label_visibility="visible"
+    )
+    
+    score_seuil = st.slider(
+        "Auto-reject below score",
+        min_value=0,
+        max_value=100,
+        value=40,
+        step=5,
+        label_visibility="visible"
+    )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<div class="section-label">How it works</div>', unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size:0.82rem; color:#7A9A7A; line-height:1.9;">
@@ -228,9 +256,16 @@ def afficher_resultat(r):
         st.error(f"Report error: {str(e)}")
 
 
-def analyser_via_n8n(texte, poste):
+def analyser_via_n8n(texte, poste, criteres=None):
+    if criteres is None:
+        criteres = {}
     try:
-        rep = requests.post(N8N_WEBHOOK, json={"texte_cv": texte, "poste_vise": poste}, timeout=30)
+        payload = {
+            "texte_cv": texte,
+            "poste_vise": poste,
+            "criteres": criteres
+        }
+        rep = requests.post(N8N_WEBHOOK, json=payload, timeout=30)
         if rep.status_code == 200:
             data = rep.json()
             return (data[0] if isinstance(data, list) else data), True
@@ -274,21 +309,37 @@ with tab1:
                         st.warning(message)
                     else:
                         try:
-                            with st.spinner("Analyzing…"):
+                            with st.status("Analyzing CV…", expanded=True) as status:
+                                st.write("📄 Extracting text from PDF…")
                                 texte = extraire_texte_pdf(chemin_tmp)
+                                
                                 if not texte.strip():
+                                    status.update(label="Extraction failed", state="error")
                                     st.error("No text could be extracted from this PDF.")
                                 else:
-                                    resultat, via_n8n = analyser_via_n8n(texte, poste_vise)
+                                    st.write("🤖 Sending to AI model (Groq LLaMA 3.3)…")
+                                    
+                                    # Build criteria dict
+                                    criteres = {}
+                                    if competences_requises:
+                                        criteres["competences"] = [c.strip() for c in competences_requises.split("\n") if c.strip()]
+                                    if experience_min > 0:
+                                        criteres["experience_min"] = experience_min
+                                    
+                                    resultat, via_n8n = analyser_via_n8n(texte, poste_vise, criteres)
+                                    
+                                    st.write("📊 Processing scores and recommendations…")
                                     st.session_state["resultat"] = resultat
                                     st.session_state["historique"].append({
                                         "nom": sanitize(resultat.get('nom', 'Unknown')),
                                         "score_global": resultat.get('score_global', 0),
                                         "recommandation": resultat.get('recommendation', resultat.get('recommandation', '')),
-                                        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M')
+                                        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M'),
+                                        "data": resultat
                                     })
-                                    if via_n8n:
-                                        st.success("Analyzed via n8n workflow")
+                                    
+                                    source = "n8n workflow" if via_n8n else "direct Groq API"
+                                    status.update(label=f"Analysis complete — via {source}", state="complete", expanded=False)
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
                         finally:
@@ -359,8 +410,11 @@ with tab2:
                             with open(f"{dossier_tmp}/{f.name}", "wb") as out:
                                 out.write(f.read())
 
-                        with st.spinner(f"Analyzing {len(fichiers_valides)} CVs…"):
+                        with st.status(f"Analyzing {len(fichiers_valides)} CVs…", expanded=True) as status:
                             resultats = analyser_plusieurs_cvs(dossier_tmp, poste_vise)
+                            if resultats:
+                                st.write(f"✓ {len(resultats)} CVs processed — Sorting by global score…")
+                                status.update(label=f"Complete: {len(resultats)} CVs ranked", state="complete", expanded=False)
 
                         if resultats:
                             st.success(f"{len(resultats)} CVs analyzed — ranked by global score")
@@ -371,7 +425,8 @@ with tab2:
                                     "nom": sanitize(r.get('nom', 'Unknown')),
                                     "score_global": r.get('score_global', 0),
                                     "recommandation": r.get('recommendation', r.get('recommandation', '')),
-                                    "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M')
+                                    "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M'),
+                                    "data": r
                                 })
 
                             st.markdown('<div class="section-label">Candidate ranking</div>', unsafe_allow_html=True)
@@ -390,6 +445,54 @@ with tab2:
                                     expanded=(i == 1)
                                 ):
                                     afficher_resultat(r)
+                            
+                            # Export buttons
+                            st.divider()
+                            st.markdown('<div class="section-label">Export results</div>', unsafe_allow_html=True)
+                            
+                            import pandas as pd
+                            
+                            # Create dataframe
+                            export_data = []
+                            for idx, r in enumerate(resultats, 1):
+                                export_data.append({
+                                    "Rank": idx,
+                                    "Name": sanitize(r.get('nom', '')),
+                                    "Current Position": sanitize(r.get('poste_actuel', '')),
+                                    "Global Score": r.get('score_global', 0),
+                                    "Technical Score": r.get('score_technique', 0),
+                                    "Experience Score": r.get('score_experience', 0),
+                                    "Recommendation": r.get('recommandation', r.get('recommendation', '')),
+                                    "Key Skills": ", ".join(r.get('competences', [])[:5]),
+                                    "Strengths": "; ".join(r.get('forces', r.get('points_forts', []))[:3]),
+                                    "HR Assessment": r.get('resume_rh', r.get('avis_rh', ''))
+                                })
+                            
+                            df_export = pd.DataFrame(export_data)
+                            
+                            col_csv, col_xlsx = st.columns(2)
+                            with col_csv:
+                                csv_data = df_export.to_csv(index=False).encode('utf-8')
+                                st.download_button(
+                                    "↓ Export CSV",
+                                    data=csv_data,
+                                    file_name="cv_ranking.csv",
+                                    mime="text/csv",
+                                    use_container_width=True
+                                )
+                            
+                            with col_xlsx:
+                                import openpyxl
+                                xlsx_buffer = io.BytesIO()
+                                with pd.ExcelWriter(xlsx_buffer, engine='openpyxl') as writer:
+                                    df_export.to_excel(writer, index=False, sheet_name='CV Ranking')
+                                st.download_button(
+                                    "↓ Export Excel",
+                                    data=xlsx_buffer.getvalue(),
+                                    file_name="cv_ranking.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    use_container_width=True
+                                )
                         else:
                             st.warning("No results generated. Please verify the files.")
                     finally:
@@ -463,6 +566,21 @@ with tab3:
         with c3:
             retained = len([r for r in df["recommandation"] if "RETENU" in str(r).upper() or "KEPT" in str(r).upper()])
             st.metric("Retained", f"{retained}/{len(df)}")
+        
+        # View past report
+        st.divider()
+        st.markdown('<div class="section-label">View past report</div>', unsafe_allow_html=True)
+        
+        noms = [f"{h['timestamp']} — {h['nom']} ({h['score_global']}%)" for h in st.session_state["historique"]]
+        selected = st.selectbox("Select a report to view", options=["— select —"] + noms, label_visibility="collapsed")
+        
+        if selected != "— select —":
+            idx = noms.index(selected)
+            report_data = st.session_state["historique"][idx].get("data")
+            if report_data:
+                st.divider()
+                st.markdown('<div class="section-label">Full report</div>', unsafe_allow_html=True)
+                afficher_resultat(report_data)
     else:
         st.markdown("""
         <div style="text-align:center; padding:3rem; border:1px dashed rgba(57,255,20,0.08); border-radius:var(--radius-lg); color:var(--text-dim);">
