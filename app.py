@@ -13,6 +13,7 @@ from utils import score_class, score_label, create_radar_chart
 from cv_validator import is_likely_cv
 from i18n import get_text
 from n8n_checker import check_n8n_status
+from themes import get_theme_css, THEMES
 import plotly.graph_objects as go
 
 # Validate API key at startup
@@ -37,6 +38,10 @@ if "historique" not in st.session_state:
 if "language" not in st.session_state:
     st.session_state["language"] = "en"
 
+# Initialize theme
+if "theme" not in st.session_state:
+    st.session_state["theme"] = "dark"
+
 # ─── GLOBAL STYLES ─────────────────────────────────────────────────────────────
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -46,9 +51,13 @@ st.markdown("""
 # Load external CSS
 try:
     with open("static/style.css", "r") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+        external_css = f.read()
 except FileNotFoundError:
-    st.warning("⚠ CSS file not found. Using fallback styling.")
+    external_css = ""
+
+# Inject theme CSS + external CSS
+theme_css = get_theme_css(st.session_state["theme"])
+st.markdown(f"<style>{theme_css}\n{external_css}</style>", unsafe_allow_html=True)
 
 
 # ─── SIDEBAR ───────────────────────────────────────────────────────────────────
@@ -73,6 +82,19 @@ with st.sidebar:
     )
     if lang != st.session_state["language"]:
         st.session_state["language"] = lang
+        st.rerun()
+    
+    # Theme selector
+    theme_options = {k: v["name"] for k, v in THEMES.items()}
+    theme = st.selectbox(
+        "Theme",
+        options=list(THEMES.keys()),
+        format_func=lambda x: theme_options[x],
+        label_visibility="collapsed",
+        key="theme_select"
+    )
+    if theme != st.session_state["theme"]:
+        st.session_state["theme"] = theme
         st.rerun()
     
     # N8N Status indicator
