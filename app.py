@@ -13,7 +13,7 @@ from utils import score_class, score_label, create_radar_chart
 from cv_validator import is_likely_cv
 from i18n import get_text
 from n8n_checker import check_n8n_status
-from themes import get_theme_css, THEMES
+from themes import get_theme, THEMES
 import plotly.graph_objects as go
 
 # Validate API key at startup
@@ -51,13 +51,9 @@ st.markdown("""
 # Load external CSS
 try:
     with open("static/style.css", "r") as f:
-        external_css = f.read()
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 except FileNotFoundError:
-    external_css = ""
-
-# Inject theme CSS + external CSS
-theme_css = get_theme_css(st.session_state["theme"])
-st.markdown(f"<style>{theme_css}\n{external_css}</style>", unsafe_allow_html=True)
+    st.warning("CSS file not found. Using fallback styling.")
 
 
 # ─── SIDEBAR ───────────────────────────────────────────────────────────────────
@@ -77,7 +73,7 @@ with st.sidebar:
     lang = st.selectbox(
         get_text("language", st.session_state["language"]),
         options=["en", "fr"],
-        format_func=lambda x: "English" if x == "en" else "Français",
+        format_func=lambda x: "English" if x == "en" else "Francais",
         label_visibility="collapsed"
     )
     if lang != st.session_state["language"]:
@@ -85,17 +81,17 @@ with st.sidebar:
         st.rerun()
     
     # Theme selector
-    theme_options = {k: v["name"] for k, v in THEMES.items()}
-    theme = st.selectbox(
-        "Theme",
+    theme_names = {k: v["name"] for k, v in THEMES.items()}
+    current_theme = st.selectbox(
+        "UI Theme",
         options=list(THEMES.keys()),
-        format_func=lambda x: theme_options[x],
+        format_func=lambda x: theme_names[x],
         label_visibility="collapsed",
-        key="theme_select"
+        index=0 if st.session_state.get("theme") == "dark" else 1
     )
-    if theme != st.session_state["theme"]:
-        st.session_state["theme"] = theme
-        st.rerun()
+    if current_theme != st.session_state.get("theme"):
+        st.session_state["theme"] = current_theme
+        st.info(f"Theme preference saved. Streamlit uses system settings - configure in config.toml for app-wide changes.")
     
     # N8N Status indicator
     is_online, status = check_n8n_status()
