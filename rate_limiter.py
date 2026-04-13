@@ -61,6 +61,44 @@ class RateLimiter:
         # Add new timestamp and allow request
         st.session_state.rate_limits[user_id].append(now)
         return True, "✓ Request allowed"
+    
+    def check_batch(self, count: int = 1, user_id: str = "default") -> Tuple[int, str]:
+        """
+        Check how many batch requests are allowed. Does not consume requests.
+        
+        Args:
+            count: Number of requests to check
+            user_id: Unique identifier for user/session
+            
+        Returns:
+            Tuple of (allowed_count, message)
+            - allowed_count: Number of requests that can be made
+            - message: Status message
+        """
+        if "rate_limits" not in st.session_state:
+            st.session_state.rate_limits = {}
+        
+        now = time.time()
+        
+        if user_id not in st.session_state.rate_limits:
+            st.session_state.rate_limits[user_id] = []
+        
+        # Clean old timestamps
+        timestamps = st.session_state.rate_limits[user_id]
+        timestamps = [t for t in timestamps if now - t < self.window_seconds]
+        st.session_state.rate_limits[user_id] = timestamps
+        
+        # Calculate available slots
+        available = self.max_requests - len(timestamps)
+        allowed_count = min(available, count)
+        
+        if allowed_count <= 0:
+            remaining = int(self.window_seconds - (now - timestamps[0]))
+            msg = f"Rate limit reached. Try again in {remaining}s"
+            return 0, msg
+        
+        msg = f"Can process {allowed_count}/{count} request(s) ({self.max_requests - len(timestamps)} slots available)"
+        return allowed_count, msg
 
 
 # Global instance

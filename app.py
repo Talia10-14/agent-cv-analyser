@@ -1,6 +1,8 @@
 import streamlit as st
 import requests
 import os
+import shutil
+import io
 from datetime import datetime
 from analyzer import analyser_cv, analyser_plusieurs_cvs, extraire_texte_pdf
 from sanitizer import sanitize, sanitize_list, sanitize_dict
@@ -619,8 +621,8 @@ with tab1:
                     if not allowed:
                         st.warning(message)
                     else:
-                        with st.spinner("Analyzing…"):
-                            try:
+                        try:
+                            with st.spinner("Analyzing…"):
                                 texte = extraire_texte_pdf(chemin_tmp)
                                 if not texte.strip():
                                     st.error("No text could be extracted from this PDF.")
@@ -635,8 +637,15 @@ with tab1:
                                     })
                                     if via_n8n:
                                         st.success("Analyzed via n8n workflow")
-                            except Exception as e:
-                                st.error(f"Error: {str(e)}")
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
+                        finally:
+                            # Clean up temporary file
+                            try:
+                                if os.path.exists(chemin_tmp):
+                                    os.remove(chemin_tmp)
+                            except Exception:
+                                pass
         else:
             st.markdown("""
             <div style="text-align:center; padding:3rem 1rem; color:var(--text-dim);">
@@ -692,44 +701,48 @@ with tab2:
                     st.warning(message)
                 else:
                     dossier_tmp = "/tmp/cvs_batch"
-                    os.makedirs(dossier_tmp, exist_ok=True)
-                    for f in fichiers_valides:
-                        with open(f"{dossier_tmp}/{f.name}", "wb") as out:
-                            out.write(f.read())
+                    try:
+                        os.makedirs(dossier_tmp, exist_ok=True)
+                        for f in fichiers_valides:
+                            with open(f"{dossier_tmp}/{f.name}", "wb") as out:
+                                out.write(f.read())
 
-                    with st.spinner(f"Analyzing {len(fichiers_valides)} CVs…"):
-                        resultats = analyser_plusieurs_cvs(dossier_tmp, poste_vise)
+                        with st.spinner(f"Analyzing {len(fichiers_valides)} CVs…"):
+                            resultats = analyser_plusieurs_cvs(dossier_tmp, poste_vise)
 
-                    if resultats:
-                        st.success(f"{len(resultats)} CVs analyzed — ranked by global score")
-                        st.divider()
+                        if resultats:
+                            st.success(f"{len(resultats)} CVs analyzed — ranked by global score")
+                            st.divider()
 
-                        for r in resultats:
-                            st.session_state["historique"].append({
-                                "nom": sanitize(r.get('nom', 'Unknown')),
-                                "score_global": r.get('score_global', 0),
-                                "recommandation": r.get('recommendation', r.get('recommandation', '')),
-                                "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M')
-                            })
+                            for r in resultats:
+                                st.session_state["historique"].append({
+                                    "nom": sanitize(r.get('nom', 'Unknown')),
+                                    "score_global": r.get('score_global', 0),
+                                    "recommandation": r.get('recommendation', r.get('recommandation', '')),
+                                    "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M')
+                                })
 
-                        st.markdown('<div class="section-label">Candidate ranking</div>', unsafe_allow_html=True)
+                            st.markdown('<div class="section-label">Candidate ranking</div>', unsafe_allow_html=True)
 
-                        medals = ["01", "02", "03"]
-                        for i, r in enumerate(resultats, 1):
-                            nom   = sanitize(r.get('nom', 'Unnamed'))
-                            score = r.get('score_global', 0)
-                            poste = sanitize(r.get('poste_actuel', ''))
-                            rank  = medals[i-1] if i <= 3 else f"{i:02d}"
-                            sc    = score_class(score)
-                            lbl   = score_label(score)
+                            medals = ["01", "02", "03"]
+                            for i, r in enumerate(resultats, 1):
+                                nom   = sanitize(r.get('nom', 'Unnamed'))
+                                score = r.get('score_global', 0)
+                                poste = sanitize(r.get('poste_actuel', ''))
+                                rank  = medals[i-1] if i <= 3 else f"{i:02d}"
+                                sc    = score_class(score)
+                                lbl   = score_label(score)
 
-                            with st.expander(
-                                f"#{rank}  {nom}  ·  {score}%  ·  {poste}",
-                                expanded=(i == 1)
-                            ):
-                                afficher_resultat(r)
-                    else:
-                        st.warning("No results generated. Please verify the files.")
+                                with st.expander(
+                                    f"#{rank}  {nom}  ·  {score}%  ·  {poste}",
+                                    expanded=(i == 1)
+                                ):
+                                    afficher_resultat(r)
+                        else:
+                            st.warning("No results generated. Please verify the files.")
+                    finally:
+                        # Clean up temporary batch folder
+                        shutil.rmtree(dossier_tmp, ignore_errors=True)
 
 # ══ TAB 3 ══════════════════════════════════════════════════════════════════════
 with tab3:

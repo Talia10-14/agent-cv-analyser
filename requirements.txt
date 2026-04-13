@@ -4,4 +4,6 @@ PyPDF2==3.0.1
 python-dotenv==1.0.0
 requests==2.31.0
 reportlab==4.0.9
-plotly==6.7.0
+plotly>=5.18.0,<6.0.0
+openpyxl>=3.1.0
+pandas>=2.3.3
