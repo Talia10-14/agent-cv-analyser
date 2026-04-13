@@ -395,6 +395,11 @@ with tab2:
                     finally:
                         # Clean up temporary batch folder
                         shutil.rmtree(dossier_tmp, ignore_errors=True)
+        else:
+            if not fichiers:
+                st.info("📁 Upload PDF files to start batch analysis")
+            else:
+                st.error("All uploaded files exceed the 10 MB size limit. Please upload smaller files.")
 
 # ══ TAB 3 ══════════════════════════════════════════════════════════════════════
 with tab3:
@@ -403,9 +408,25 @@ with tab3:
 
     col_a, col_b = st.columns([4, 1])
     with col_b:
-        if st.button("Clear", use_container_width=True):
-            st.session_state["historique"] = []
-            st.rerun()
+        if "confirm_clear" not in st.session_state:
+            st.session_state["confirm_clear"] = False
+        
+        if not st.session_state["confirm_clear"]:
+            if st.button("Clear", use_container_width=True):
+                st.session_state["confirm_clear"] = True
+                st.rerun()
+        else:
+            st.warning("This will delete all session history. Confirm?")
+            col_yes, col_no = st.columns(2)
+            with col_yes:
+                if st.button("Yes, clear", type="primary", use_container_width=True):
+                    st.session_state["historique"] = []
+                    st.session_state["confirm_clear"] = False
+                    st.rerun()
+            with col_no:
+                if st.button("Cancel", use_container_width=True):
+                    st.session_state["confirm_clear"] = False
+                    st.rerun()
 
     st.divider()
 
