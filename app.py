@@ -42,7 +42,6 @@ if "language" not in st.session_state:
 if "theme" not in st.session_state:
     st.session_state["theme"] = "dark"
 
-# ─── GLOBAL STYLES ─────────────────────────────────────────────────────────────
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -51,9 +50,73 @@ st.markdown("""
 # Load external CSS
 try:
     with open("static/style.css", "r") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+        css_content = f.read()
 except FileNotFoundError:
-    st.warning("CSS file not found. Using fallback styling.")
+    css_content = ""
+
+# Inject theme-specific CSS overrides
+current_theme = st.session_state.get("theme", "dark")
+theme_colors = get_theme(current_theme)
+
+if current_theme == "light":
+    theme_css = f"""
+    :root {{
+        --primary: {theme_colors['primary']};
+        --bg: {theme_colors['bg']};
+        --bg-alt: {theme_colors['bg_alt']};
+        --text: {theme_colors['text']};
+        --text-dim: {theme_colors['text_dim']};
+        --warn: {theme_colors['warn']};
+        --danger: {theme_colors['danger']};
+    }}
+    
+    [data-testid="stAppViewContainer"] {{
+        background-color: {theme_colors['bg']} !important;
+        color: {theme_colors['text']} !important;
+    }}
+    
+    [data-testid="stSidebar"] {{
+        background-color: {theme_colors['bg_alt']} !important;
+    }}
+    
+    [data-testid="stVerticalBlock"] {{
+        color: {theme_colors['text']} !important;
+    }}
+    
+    input, textarea, select {{
+        background-color: {theme_colors['bg_alt']} !important;
+        color: {theme_colors['text']} !important;
+    }}
+    
+    .stButton > button {{
+        background-color: {theme_colors['primary']} !important;
+        color: #000 !important;
+    }}
+    
+    .stTabs [role="tablist"] {{
+        border-bottom-color: {theme_colors['border_subtle']} !important;
+    }}
+    
+    .stTabs [role="tab"][aria-selected="true"] {{
+        color: {theme_colors['primary']} !important;
+    }}
+    
+    .stMetric {{
+        background-color: {theme_colors['bg_alt']} !important;
+    }}
+    
+    .stMarkdown {{
+        color: {theme_colors['text']} !important;
+    }}
+    
+    .stExpander {{
+        background-color: {theme_colors['bg_alt']} !important;
+    }}
+    """
+else:
+    theme_css = ""
+
+st.markdown(f"<style>{theme_css}\n{css_content}</style>", unsafe_allow_html=True)
 
 
 # ─── SIDEBAR ───────────────────────────────────────────────────────────────────
@@ -85,10 +148,11 @@ with st.sidebar:
         "UI Theme",
         options=list(THEMES.keys()),
         format_func=lambda x: theme_names[x],
-        label_visibility="collapsed",
-        index=0 if st.session_state.get("theme") == "dark" else 1
+        label_visibility="collapsed"
     )
-    st.session_state["theme"] = current_theme
+    if current_theme != st.session_state.get("theme"):
+        st.session_state["theme"] = current_theme
+        st.rerun()
     
     # N8N Status indicator
     is_online, status = check_n8n_status()
