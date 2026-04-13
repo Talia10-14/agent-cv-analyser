@@ -60,98 +60,100 @@ theme_colors = get_theme(current_theme)
 
 if current_theme == "light":
     theme_css = f"""
-    /* Light Theme - Complete Override */
-    :root {{
-        --primary: {theme_colors['primary']};
-        --bg: {theme_colors['bg']};
-        --bg-alt: {theme_colors['bg_alt']};
-        --text: {theme_colors['text']};
-        --text-dim: {theme_colors['text_dim']};
-        --warn: {theme_colors['warn']};
-        --danger: {theme_colors['danger']};
-    }}
+    /* LIGHT THEME - AGGRESSIVE OVERRIDES */
     
-    /* Main containers */
-    html, body {{
-        background-color: {theme_colors['bg']} !important;
+    /* Force everything readable */
+    * {{
         color: {theme_colors['text']} !important;
     }}
     
-    [data-testid="stAppViewContainer"] {{
+    html, body, [data-testid="stAppViewContainer"] {{
         background-color: {theme_colors['bg']} !important;
-        color: {theme_colors['text']} !important;
     }}
     
-    [data-testid="stSidebar"] {{
+    [data-testid="stSidebar"], [data-testid="stSidebarContent"] {{
         background-color: {theme_colors['bg_alt']} !important;
     }}
     
-    [data-testid="stSidebarContent"] {{
+    /* ALL Text must be readable */
+    p, span, div, label, h1, h2, h3, h4, h5, h6 {{
+        color: {theme_colors['text']} !important;
+    }}
+    
+    /* Headings in sidebar */
+    [data-testid="stSidebar"] * {{
+        color: {theme_colors['text']} !important;
+    }}
+    
+    /* Kill the bright green text */
+    [style*="color"] {{
+        color: {theme_colors['text']} !important;
+    }}
+    
+    /* Selectbox - must be white background with dark text */
+    [data-baseweb="select"] {{
         background-color: {theme_colors['bg_alt']} !important;
     }}
     
-    /* Text and typography */
-    [data-testid="stVerticalBlock"] {{
-        color: {theme_colors['text']} !important;
-    }}
-    
-    .stMarkdown, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown p {{
-        color: {theme_colors['text']} !important;
-    }}
-    
-    /* Inputs and forms */
-    input[type="text"], input[type="password"], input[type="email"], 
-    input[type="number"], textarea, select {{
+    [data-baseweb="select"] * {{
         background-color: {theme_colors['bg_alt']} !important;
         color: {theme_colors['text']} !important;
-        border: 1px solid {theme_colors['border']} !important;
     }}
     
-    input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus,
-    input[type="number"]:focus, textarea:focus, select:focus {{
+    /* Tabs - dark mode killer */
+    [data-testid="stTabs"] {{
+        background-color: transparent !important;
+    }}
+    
+    .stTabs [role="tablist"] {{
+        background-color: {theme_colors['bg_alt']} !important;
+        border-bottom: 2px solid #ddd !important;
+    }}
+    
+    .stTabs [role="tab"] {{
+        background-color: {theme_colors['bg_alt']} !important;
+        color: {theme_colors['text_dim']} !important;
+    }}
+    
+    .stTabs [role="tab"]:hover {{
+        background-color: #e0e0e0 !important;
+    }}
+    
+    .stTabs [role="tab"][aria-selected="true"] {{
         background-color: {theme_colors['bg']} !important;
+        color: {theme_colors['primary']} !important;
+        border-bottom: 3px solid {theme_colors['primary']} !important;
+    }}
+    
+    /* Inputs */
+    input, textarea, select {{
+        background-color: {theme_colors['bg_alt']} !important;
         color: {theme_colors['text']} !important;
-        border: 2px solid {theme_colors['primary']} !important;
+        border: 1px solid #ccc !important;
+    }}
+    
+    input::placeholder {{
+        color: {theme_colors['text_muted']} !important;
     }}
     
     /* Buttons */
     .stButton > button {{
         background-color: {theme_colors['primary']} !important;
-        color: #000 !important;
+        color: white !important;
         border: none !important;
     }}
     
     .stButton > button:hover {{
-        background-color: {theme_colors['primary']} !important;
-        opacity: 0.9;
-    }}
-    
-    /* Tabs */
-    .stTabs {{
-        background-color: {theme_colors['bg_alt']} !important;
-    }}
-    
-    .stTabs [role="tablist"] {{
-        border-bottom: 2px solid {theme_colors['bg_alt']} !important;
-    }}
-    
-    .stTabs [role="tab"] {{
-        color: {theme_colors['text_dim']} !important;
-        background-color: transparent !important;
-    }}
-    
-    .stTabs [role="tab"][aria-selected="true"] {{
-        color: {theme_colors['primary']} !important;
-        border-bottom: 3px solid {theme_colors['primary']} !important;
+        background-color: #1e6e3f !important;
     }}
     
     /* Cards and expanders */
     .stExpander {{
         background-color: {theme_colors['bg_alt']} !important;
-        border: 1px solid {theme_colors['border_subtle']} !important;
+        border: 1px solid #ddd !important;
     }}
     
-    [data-testid="stExpander"] {{
+    .stExpander > div {{
         background-color: {theme_colors['bg_alt']} !important;
     }}
     
@@ -162,92 +164,43 @@ if current_theme == "light":
         padding: 1rem;
     }}
     
-    [data-testid="stMetricValue"] {{
+    .stMetric * {{
         color: {theme_colors['text']} !important;
     }}
     
-    [data-testid="stMetricLabel"] {{
-        color: {theme_colors['text_dim']} !important;
+    /* Dividers */
+    hr {{
+        border-color: #ddd !important;
     }}
     
-    /* Dataframes */
-    .stDataFrame {{
-        background-color: {theme_colors['bg_alt']} !important;
-    }}
-    
+    /* Data frame */
     [data-testid="stDataFrame"] {{
-        background-color: {theme_colors['bg_alt']} !important;
+        background-color: {theme_colors['bg']} !important;
     }}
     
-    .stDataFrame tbody tr {{
+    .stDataFrame * {{
         background-color: {theme_colors['bg']} !important;
         color: {theme_colors['text']} !important;
     }}
     
-    .stDataFrame th {{
+    /* Alerts */
+    [data-testid="stAlert"] {{
         background-color: {theme_colors['bg_alt']} !important;
         color: {theme_colors['text']} !important;
     }}
     
-    /* Alerts and messages */
-    .stAlert {{
-        background-color: {theme_colors['bg_alt']} !important;
-        color: {theme_colors['text']} !important;
-        border: 1px solid {theme_colors['border']} !important;
-    }}
-    
-    .stWarning {{
-        background-color: rgba(255, 152, 0, 0.1) !important;
-    }}
-    
-    .stError {{
-        background-color: rgba(244, 67, 54, 0.1) !important;
-    }}
-    
-    .stSuccess {{
-        background-color: rgba(29, 184, 29, 0.1) !important;
-    }}
-    
-    .stInfo {{
-        background-color: rgba(33, 150, 243, 0.1) !important;
+    /* Progress bar colors */
+    [role="progressbar"] {{
+        background-color: #ddd !important;
     }}
     
     /* Sliders */
-    .stSlider {{
-        color: {theme_colors['text']} !important;
-    }}
-    
     [data-testid="stSlider"] {{
         color: {theme_colors['text']} !important;
     }}
     
-    /* Selectbox dropdown */
-    [data-testid="selectbox"] {{
-        background-color: {theme_colors['bg_alt']} !important;
-    }}
-    
-    /* Divider */
-    hr {{
-        border-color: {theme_colors['border_subtle']} !important;
-    }}
-    
-    /* Links */
-    a {{
-        color: {theme_colors['primary']} !important;
-    }}
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar {{
-        background-color: {theme_colors['bg_alt']};
-    }}
-    
-    ::-webkit-scrollbar-track {{
-        background-color: {theme_colors['bg']};
-    }}
-    
-    ::-webkit-scrollbar-thumb {{
-        background-color: {theme_colors['text_dim']};
-        border-radius: 4px;
+    .stSlider * {{
+        color: {theme_colors['text']} !important;
     }}
     """
 else:
