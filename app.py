@@ -74,11 +74,10 @@ with st.sidebar:
         get_text("language", st.session_state["language"]),
         options=["en", "fr"],
         format_func=lambda x: "English" if x == "en" else "Francais",
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        index=0 if st.session_state["language"] == "en" else 1
     )
-    if lang != st.session_state["language"]:
-        st.session_state["language"] = lang
-        st.rerun()
+    st.session_state["language"] = lang
     
     # Theme selector
     theme_names = {k: v["name"] for k, v in THEMES.items()}
@@ -89,9 +88,7 @@ with st.sidebar:
         label_visibility="collapsed",
         index=0 if st.session_state.get("theme") == "dark" else 1
     )
-    if current_theme != st.session_state.get("theme"):
-        st.session_state["theme"] = current_theme
-        st.info(f"Theme preference saved. Streamlit uses system settings - configure in config.toml for app-wide changes.")
+    st.session_state["theme"] = current_theme
     
     # N8N Status indicator
     is_online, status = check_n8n_status()
