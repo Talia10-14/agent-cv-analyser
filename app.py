@@ -10,6 +10,7 @@ from config import get_groq_api_key, ConfigError, MAX_FILE_SIZE, DEFAULT_POSITIO
 from rate_limiter import limiter
 from report_generator import CVReportGenerator
 from utils import score_class, score_label, create_radar_chart
+from cv_validator import is_likely_cv
 import plotly.graph_objects as go
 
 # Validate API key at startup
@@ -317,6 +318,13 @@ with tab1:
                                     status.update(label="Extraction failed", state="error")
                                     st.error("No text could be extracted from this PDF.")
                                 else:
+                                    # Validate that PDF is likely a CV
+                                    is_cv, reason = is_likely_cv(texte)
+                                    if not is_cv:
+                                        st.warning(f"⚠ This document may not be a CV: {reason}")
+                                        if not st.checkbox("Analyze anyway", key="force_analyze"):
+                                            st.info("Analysis cancelled.")
+                                            st.stop()
                                     st.write("🤖 Sending to AI model (Groq LLaMA 3.3)…")
                                     
                                     # Build criteria dict
