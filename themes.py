@@ -18,16 +18,16 @@ THEMES = {
     },
     "light": {
         "name": "Light",
-        "primary": "#1DB81D",
+        "primary": "#2E8B57",
         "bg": "#FFFFFF",
-        "bg_alt": "#F8F8F8",
+        "bg_alt": "#F5F5F5",
         "text": "#1A1A1A",
-        "text_dim": "#666666",
-        "text_muted": "#999999",
-        "border": "rgba(29, 184, 29, 0.2)",
-        "border_subtle": "rgba(29, 184, 29, 0.08)",
-        "warn": "#FF9800",
-        "danger": "#F44336",
+        "text_dim": "#555555",
+        "text_muted": "#888888",
+        "border": "#D0D0D0",
+        "border_subtle": "#E8E8E8",
+        "warn": "#FF8C00",
+        "danger": "#DC3545",
     }
 }
 

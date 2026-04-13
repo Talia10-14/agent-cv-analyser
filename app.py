@@ -60,6 +60,7 @@ theme_colors = get_theme(current_theme)
 
 if current_theme == "light":
     theme_css = f"""
+    /* Light Theme - Complete Override */
     :root {{
         --primary: {theme_colors['primary']};
         --bg: {theme_colors['bg']};
@@ -68,6 +69,12 @@ if current_theme == "light":
         --text-dim: {theme_colors['text_dim']};
         --warn: {theme_colors['warn']};
         --danger: {theme_colors['danger']};
+    }}
+    
+    /* Main containers */
+    html, body {{
+        background-color: {theme_colors['bg']} !important;
+        color: {theme_colors['text']} !important;
     }}
     
     [data-testid="stAppViewContainer"] {{
@@ -79,38 +86,168 @@ if current_theme == "light":
         background-color: {theme_colors['bg_alt']} !important;
     }}
     
+    [data-testid="stSidebarContent"] {{
+        background-color: {theme_colors['bg_alt']} !important;
+    }}
+    
+    /* Text and typography */
     [data-testid="stVerticalBlock"] {{
         color: {theme_colors['text']} !important;
     }}
     
-    input, textarea, select {{
-        background-color: {theme_colors['bg_alt']} !important;
+    .stMarkdown, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown p {{
         color: {theme_colors['text']} !important;
     }}
     
+    /* Inputs and forms */
+    input[type="text"], input[type="password"], input[type="email"], 
+    input[type="number"], textarea, select {{
+        background-color: {theme_colors['bg_alt']} !important;
+        color: {theme_colors['text']} !important;
+        border: 1px solid {theme_colors['border']} !important;
+    }}
+    
+    input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus,
+    input[type="number"]:focus, textarea:focus, select:focus {{
+        background-color: {theme_colors['bg']} !important;
+        color: {theme_colors['text']} !important;
+        border: 2px solid {theme_colors['primary']} !important;
+    }}
+    
+    /* Buttons */
     .stButton > button {{
         background-color: {theme_colors['primary']} !important;
         color: #000 !important;
+        border: none !important;
+    }}
+    
+    .stButton > button:hover {{
+        background-color: {theme_colors['primary']} !important;
+        opacity: 0.9;
+    }}
+    
+    /* Tabs */
+    .stTabs {{
+        background-color: {theme_colors['bg_alt']} !important;
     }}
     
     .stTabs [role="tablist"] {{
-        border-bottom-color: {theme_colors['border_subtle']} !important;
+        border-bottom: 2px solid {theme_colors['bg_alt']} !important;
+    }}
+    
+    .stTabs [role="tab"] {{
+        color: {theme_colors['text_dim']} !important;
+        background-color: transparent !important;
     }}
     
     .stTabs [role="tab"][aria-selected="true"] {{
         color: {theme_colors['primary']} !important;
+        border-bottom: 3px solid {theme_colors['primary']} !important;
     }}
     
-    .stMetric {{
+    /* Cards and expanders */
+    .stExpander {{
+        background-color: {theme_colors['bg_alt']} !important;
+        border: 1px solid {theme_colors['border_subtle']} !important;
+    }}
+    
+    [data-testid="stExpander"] {{
         background-color: {theme_colors['bg_alt']} !important;
     }}
     
-    .stMarkdown {{
+    /* Metrics */
+    .stMetric {{
+        background-color: {theme_colors['bg_alt']} !important;
+        border-radius: 8px;
+        padding: 1rem;
+    }}
+    
+    [data-testid="stMetricValue"] {{
         color: {theme_colors['text']} !important;
     }}
     
-    .stExpander {{
+    [data-testid="stMetricLabel"] {{
+        color: {theme_colors['text_dim']} !important;
+    }}
+    
+    /* Dataframes */
+    .stDataFrame {{
         background-color: {theme_colors['bg_alt']} !important;
+    }}
+    
+    [data-testid="stDataFrame"] {{
+        background-color: {theme_colors['bg_alt']} !important;
+    }}
+    
+    .stDataFrame tbody tr {{
+        background-color: {theme_colors['bg']} !important;
+        color: {theme_colors['text']} !important;
+    }}
+    
+    .stDataFrame th {{
+        background-color: {theme_colors['bg_alt']} !important;
+        color: {theme_colors['text']} !important;
+    }}
+    
+    /* Alerts and messages */
+    .stAlert {{
+        background-color: {theme_colors['bg_alt']} !important;
+        color: {theme_colors['text']} !important;
+        border: 1px solid {theme_colors['border']} !important;
+    }}
+    
+    .stWarning {{
+        background-color: rgba(255, 152, 0, 0.1) !important;
+    }}
+    
+    .stError {{
+        background-color: rgba(244, 67, 54, 0.1) !important;
+    }}
+    
+    .stSuccess {{
+        background-color: rgba(29, 184, 29, 0.1) !important;
+    }}
+    
+    .stInfo {{
+        background-color: rgba(33, 150, 243, 0.1) !important;
+    }}
+    
+    /* Sliders */
+    .stSlider {{
+        color: {theme_colors['text']} !important;
+    }}
+    
+    [data-testid="stSlider"] {{
+        color: {theme_colors['text']} !important;
+    }}
+    
+    /* Selectbox dropdown */
+    [data-testid="selectbox"] {{
+        background-color: {theme_colors['bg_alt']} !important;
+    }}
+    
+    /* Divider */
+    hr {{
+        border-color: {theme_colors['border_subtle']} !important;
+    }}
+    
+    /* Links */
+    a {{
+        color: {theme_colors['primary']} !important;
+    }}
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {{
+        background-color: {theme_colors['bg_alt']};
+    }}
+    
+    ::-webkit-scrollbar-track {{
+        background-color: {theme_colors['bg']};
+    }}
+    
+    ::-webkit-scrollbar-thumb {{
+        background-color: {theme_colors['text_dim']};
+        border-radius: 4px;
     }}
     """
 else:
